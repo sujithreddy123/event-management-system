@@ -1,122 +1,105 @@
--- phpMyAdmin SQL Dump
--- version 4.6.5.2
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Jun 10, 2017 at 11:21 PM
--- Server version: 10.1.21-MariaDB
--- PHP Version: 5.6.30
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
+-- Event Management System SQL Schema & Sample Data
 
+-- 1. Venues Table
+CREATE TABLE Venue (
+    venue_id INT PRIMARY KEY AUTO_INCREMENT,
+    venue_name VARCHAR(100) NOT NULL,
+    location VARCHAR(150),
+    capacity INT
+);
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+-- 2. Organizers Table
+CREATE TABLE Organizer (
+    organizer_id INT PRIMARY KEY AUTO_INCREMENT,
+    organizer_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(15)
+);
 
---
--- Database: `year2project`
---
+-- 3. Events Table
+CREATE TABLE Event (
+    event_id INT PRIMARY KEY AUTO_INCREMENT,
+    event_name VARCHAR(100) NOT NULL,
+    event_date DATE,
+    event_type VARCHAR(50),
+    budget DECIMAL(12,2),
+    venue_id INT,
+    organizer_id INT,
+    FOREIGN KEY (venue_id) REFERENCES Venue(venue_id),
+    FOREIGN KEY (organizer_id) REFERENCES Organizer(organizer_id)
+);
 
--- --------------------------------------------------------
+-- 4. Attendees Table
+CREATE TABLE Attendee (
+    attendee_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(15)
+);
 
---
--- Table structure for table `events`
---
+-- 5. Registration Table (Event-Attendee link; many-to-many)
+CREATE TABLE Registration (
+    registration_id INT PRIMARY KEY AUTO_INCREMENT,
+    event_id INT,
+    attendee_id INT,
+    seat_number VARCHAR(10),
+    FOREIGN KEY (event_id) REFERENCES Event(event_id),
+    FOREIGN KEY (attendee_id) REFERENCES Attendee(attendee_id)
+);
 
-CREATE TABLE `events` (
-  `EventID` int(11) NOT NULL,
-  `Title` varchar(255) NOT NULL,
-  `Description` varchar(255) NOT NULL,
-  `StartDate` varchar(255) NOT NULL,
-  `EndDate` varchar(255) NOT NULL,
-  `Cost` int(11) NOT NULL,
-  `LocationID` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+-- Sample Data for Demonstration ---------------------------------------
 
---
--- Dumping data for table `events`
---
+-- Venues
+INSERT INTO Venue (venue_name, location, capacity) VALUES
+('Grand Hall', 'City Center', 500),
+('Open Ground', 'West Side', 1000);
 
-INSERT INTO `events` (`EventID`, `Title`, `Description`, `StartDate`, `EndDate`, `Cost`, `LocationID`) VALUES
-(1, 'Wedding Anniversary', '1st Anniversary Celebration', '10-Oct-2015', '10-Oct-2016', 25000, 1);
+-- Organizers
+INSERT INTO Organizer (organizer_name, email, phone) VALUES
+('Tech Society', 'techsoc@gmail.com', '9876543210'),
+('Youth Forum', 'yf@gmail.com', '9123456780');
 
--- --------------------------------------------------------
+-- Events
+INSERT INTO Event (event_name, event_date, event_type, budget, venue_id, organizer_id) VALUES
+('Tech Conference', '2025-10-10', 'Conference', 150000.00, 1, 1),
+('Music Fest', '2025-11-05', 'Festival', 200000.00, 2, 2);
 
---
--- Table structure for table `locations`
---
+-- Attendees
+INSERT INTO Attendee (name, email, phone) VALUES
+('Alice Kumar', 'alice@gmail.com', '8888888888'),
+('Rahul Verma', 'rahul@gmail.com', '9999999999'),
+('Sneha Patel', 'sneha@gmail.com', '7777777777');
 
-CREATE TABLE `locations` (
-  `LocationID` int(11) NOT NULL,
-  `Name` varchar(255) NOT NULL,
-  `Address` varchar(255) NOT NULL,
-  `ManagerFName` varchar(255) NOT NULL,
-  `ManagerLName` varchar(255) NOT NULL,
-  `ManagerEmail` varchar(255) NOT NULL,
-  `ManagerNumber` int(11) NOT NULL,
-  `MaxCapacity` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+-- Registrations
+INSERT INTO Registration (event_id, attendee_id, seat_number) VALUES
+(1, 1, 'A1'),
+(1, 2, 'A2'),
+(2, 3, 'B1');
 
---
--- Dumping data for table `locations`
---
+-- Useful SQL Queries --------------------------------------------------
 
-INSERT INTO `locations` (`LocationID`, `Name`, `Address`, `ManagerFName`, `ManagerLName`, `ManagerEmail`, `ManagerNumber`, `MaxCapacity`) VALUES
-(1, 'Royal Hotel', 'Bray', 'John', 'Byrne', 'John@email.com', 123456, 100);
+-- 1. List all attendees for a specific event
+SELECT E.event_name, A.name
+FROM Event E
+JOIN Registration R ON E.event_id = R.event_id
+JOIN Attendee A ON R.attendee_id = A.attendee_id
+WHERE E.event_id = 1;
 
--- --------------------------------------------------------
+-- 2. Show upcoming events at a specific venue
+SELECT event_name, event_date
+FROM Event
+WHERE venue_id = 2 AND event_date > CURDATE();
 
---
--- Table structure for table `users`
---
+-- 3. List all events and their organizers
+SELECT E.event_name, O.organizer_name
+FROM Event E
+JOIN Organizer O ON E.organizer_id = O.organizer_id;
 
-CREATE TABLE `users` (
-  `username` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+-- 4. Find all events happening today
+SELECT event_name, event_date
+FROM Event
+WHERE event_date = CURDATE();
 
---
--- Dumping data for table `users`
---
+-- End of File
 
-INSERT INTO `users` (`username`, `password`, `role`) VALUES
-('test', '1234', 'user');
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `events`
---
-ALTER TABLE `events`
-  ADD PRIMARY KEY (`EventID`),
-  ADD KEY `LocationID` (`LocationID`);
-
---
--- Indexes for table `locations`
---
-ALTER TABLE `locations`
-  ADD PRIMARY KEY (`LocationID`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `events`
---
-ALTER TABLE `events`
-  MODIFY `EventID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
---
--- AUTO_INCREMENT for table `locations`
---
-ALTER TABLE `locations`
-  MODIFY `LocationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
