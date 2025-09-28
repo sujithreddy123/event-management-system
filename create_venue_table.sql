@@ -10,7 +10,10 @@ CREATE TABLE Venue (
 
 
 --
--- Dumping data for table `users`
+-- Dumping data for table `venues`
 --
+INSERT INTO Venue (venue_name, location, capacity) VALUES
+('Grand Hall', 'City Center', 500),
+('Open Ground', 'West Side', 1000);
 
 
